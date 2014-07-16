@@ -2,17 +2,16 @@
 	"name": "raptor-i18n",
 	"description": "Library for handling internationalization",
 	"keywords": [
-		"EcmaScript",
 		"i18n",
-		"ES5",
-		"ES6"
+		"localization",
+		"internationalization"
 	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/raptorjs3/raptor-i18n.git"
 	},
 	"scripts": {
-		"test": "node_modules/.bin/jshint array/ date/ function/ json/ object/ string/ *.js"
+		"test": "node_modules/.bin/jshint *.js"
 	},
 	"author": "Phillip Gates-Idem <pnidem@gmail.com>",
 	"maintainers": "Phillip Gates-Idem <pnidem@gmail.com>",
