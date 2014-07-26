@@ -11,6 +11,9 @@
   "browser": {
     "./raptor-i18n.js": "./raptor-i18n_browser.js"
   },
+  "scripts": {
+    "test": "node_modules/.bin/mocha --ui bdd --reporter spec ./test"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/raptorjs3/raptor-i18n.git"
