@@ -172,7 +172,6 @@ module.exports = {
 
     read: function(optimizerContext, callback) {
         var out = new Readable();
-        out.push('(function(){\n');
 
         out._read = function() {
             // don't need to implement becuase we automatically start reading raw dictionary
@@ -198,6 +197,8 @@ module.exports = {
             if (err) {
                 logger.error('Error reading dictionaries for locale "' + this.locale + '"', err);
             } else {
+                out.push('(function(){\n');
+                
                 var i;
 
                 for (i = 0; i < localeContext.beforeCode.length; i++) {
