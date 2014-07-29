@@ -5,62 +5,85 @@ require('raptor-polyfill/string/endsWith');
 var SUFFIX = 'i18n.json';
 
 function I18nContext(options) {
-    this.srcDir = options.srcDir;
-    this.localizedDir = options.localizedDir;
+    this.config = options.config;
     this.dictionaryNames = [];
     this.dictionaryByName = {};
     this.rawDictionaryByPath = {};
 }
 
-function getDictionaryName(path) {
-    var name = path;
+function getBaseAndExtension(path, srcDir) {
+    var base = path.substring(srcDir.length + 1);
+    var extension;
 
-    if (name.endsWith(SUFFIX)) {
-        name = name.substring(0, name.length - SUFFIX.length);
+    if (base.endsWith(SUFFIX)) {
+        var charBeforeSuffix = base.charAt(base.length - SUFFIX.length - 1);
+        if (charBeforeSuffix === '.') {
+            // path is something like "/xyz/something.i18n.json"
+            base = base.substring(0, base.length - SUFFIX.length - 1);
+            extension = '.' + SUFFIX;
+
+            // return ['/xyz/something', '.i18n.json']
+            return [base, extension];
+        } else if (charBeforeSuffix === '/') {
+            // path is something like "/xyz/i18n.json"
+            base = base.substring(0, base.length - SUFFIX.length);
+            extension = '.' + SUFFIX;
+
+            // return ['/xyz/', '.i18n.json']
+            return [base, extension];
+        }
     }
 
-    var lastChar = name.charAt(name.length - 1);
-    if ((lastChar === '/') || (lastChar === '.')) {
-        name = name.substring(0, name.length - 1);
+    var pos;
+    if ((pos = base.indexOf('.')) === -1) {
+        base = base.substring(0, pos);
+        extension = base.substring(pos);
+        return [base, extension];
+    } else {
+        return [base, ''];
+    }
+}
+
+function getDictionaryInfo(path, config) {
+    var paths = config.paths;
+    for (var i = 0; i < paths.length; i++) {
+        var candidate = paths[i];
+        if (path.indexOf(candidate.srcDir) === 0) {
+            var name;
+            
+            var parts = getBaseAndExtension(path, candidate.srcDir);
+            var base = parts[0];
+            var extension = parts[1];
+
+            var lastChar = base.charAt(base.length - 1);
+            if (lastChar === '/') {
+                name = base.substring(0, base.length - 1);
+            } else {
+                name = base;
+                base = base + '_';
+            }
+
+            return {
+                name: name,
+                absolutePath: path,
+                base: base,
+                extension: extension,
+                localizedDir: candidate.localizedDir
+            };
+        }
     }
 
-    return name;
+    logger.warn('Ignoring "' + path + '" because it is not under srcDir.');
+    return null;
 }
 
 I18nContext.prototype = {
     addI18nJsonPath: function(path) {
-        if (path.indexOf(this.srcDir) === 0) {
-            var relativePath = path.substring(this.srcDir.length + 1);
-
-            var name = getDictionaryName(relativePath);
-
-            var extension;
-
-            var pos = relativePath.indexOf('.');
-            if (pos === -1) {
-                extension = '';
-            } else {
-                extension = relativePath.substring(pos);
-                relativePath = relativePath.substring(0, pos);
-            }
-
-            var info;
-
-            this.dictionaryByName[name] = info = {
-                name: name,
-                absolutePath: path,
-                relativePath: relativePath,
-                extension: extension,
-                rawDictionary: new DataHolder({
-                    loader: function(callback) {
-                        
-                    }
-                })
-            };
-
+        var dictionaryInfo = getDictionaryInfo(path, this.config);
+        if (dictionaryInfo) {
+            var name = dictionaryInfo.name;
+            this.dictionaryByName[name] = dictionaryInfo;
             this.dictionaryNames.push(name);
-        } else {
-            logger.warn('Ignoring "' + path + '" because it is not under srcDir.');
         }
     },
 
@@ -82,12 +105,21 @@ I18nContext.prototype = {
         var rawDictionaryHolder = this.rawDictionaryByPath[path];
         if (rawDictionaryHolder === undefined) {
             this.rawDictionaryByPath[path] = rawDictionaryHolder = new DataHolder();
+            
             fs.readFile(path, 'utf8', function(err, json) {
                 if (err) {
                     return rawDictionaryHolder.resolve(null);
                 }
 
-                rawDictionaryHolder.resolve(JSON.parse(json));
+                var raw;
+                try {
+                    raw = JSON.parse(json);
+                } catch(err) {
+                    logger.error('Error invalid JSON in file "' + path + '"', err);
+                    return rawDictionaryHolder.reject(err);
+                }
+
+                rawDictionaryHolder.resolve(raw);
             });
         }
 

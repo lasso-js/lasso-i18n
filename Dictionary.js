@@ -4,16 +4,6 @@ function Dictionary(name, dictionary, localeCode) {
     this._localeCode = localeCode;
 }
 
-/*
- * This map defines handlers for values that are not simple strings.
- */
-var handlers = {
-    dust: function(key, rawValue, substitutions) {
-        // called in the scope of the dictionary
-        //return i18n.renderDustTemplate(rawValue.templateName, substitutions);
-    }
-};
-
 Dictionary.prototype = {
 
     raw: function() {
@@ -43,11 +33,8 @@ Dictionary.prototype = {
 
         if (rawValue.constructor === String) {
             return rawValue;
-        } else if (rawValue.type !== undefined) {
-            var handler = handlers[rawValue.type];
-            if (handler) {
-                return handler.call(this, key, rawValue, substitutions);
-            }
+        } else if (rawValue.constructor === Function) {
+            return rawValue.call(this, substitutions);
         }
 
         return rawValue;

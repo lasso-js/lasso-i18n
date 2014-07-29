@@ -1,17 +1,17 @@
-var locales;
 var util = require('./util');
 
+var CONFIG_MODULE_NAME = '/raptor-i18n/config';
+
+var config = require(CONFIG_MODULE_NAME);
+
 module.exports = {
-    initialize: function(config) {
-        locales = config.locales;
-    },
 
     getSupportedLocales: function() {
-        return locales;
+        return config.locales;
     },
 
     findBestLocale: function(preferredLocaleCode) {
-        return util.findBestLocale(preferredLocaleCode, locales);
+        return util.findBestLocale(preferredLocaleCode, this.getSupportedLocales());
     },
 
     loadLocale: function(localeCode, callback) {

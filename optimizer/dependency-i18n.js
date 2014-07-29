@@ -2,24 +2,42 @@ var I18nContext = require('./I18nContext');
 
 var CONTEXT_ATTRIBUTE_KEY = 'raptor-i18n';
 
+function configurePaths(config) {
+    var paths = this.paths = new Array(config.paths.length);
+
+    for (var i = 0; i < config.paths.length; i++) {
+        var path = config.paths[i];
+        if (path.constructor === String) {
+            path = {
+                srcDir: path,
+                localizedDir: path
+            };
+        } else {
+            if (!path.localizedDir && !path.srcDir) {
+                throw new Error('"srcDir" or "localizedDir" is required for i18n path');
+            } else if(!path.localizedDir) {
+                path.localizedDir = path.srcDir;
+            } else if(!path.srcDir) {
+                path.srcDir = path.localizedDir;
+            }
+        }
+
+        paths[i] = path;
+    }
+    
+    return paths;
+}
+
 module.exports = function create(config) {
 
     var locales = config.locales;
 
-    if (!locales || !locales.length) {
-        locales = [''];
-    } else {
-        locales.push('');
+    if (!config.paths) {
+        throw new Error('"paths" configuration option is required');
     }
 
-    if (!config.srcDir) {
-        throw new Error('"srcDir" configuration option is required');
-    }
-
-    if (!config.localizedDir) {
-        throw new Error('"localizedDir" configuration option is required');
-    }
-
+    config.paths = configurePaths(config);
+    
     return {
         properties: {
             path: 'string'
@@ -35,8 +53,7 @@ module.exports = function create(config) {
             var i18nContext = optimizerContext.attributes[CONTEXT_ATTRIBUTE_KEY];
             if (i18nContext === undefined) {
                 i18nContext = optimizerContext.attributes[CONTEXT_ATTRIBUTE_KEY] = new I18nContext({
-                    srcDir: config.srcDir,
-                    localizedDir: config.localizedDir
+                    config: config
                 });
 
                 var async = {};
@@ -59,12 +76,7 @@ module.exports = function create(config) {
                     dependencies: [
                         // make sure raptor-i18n is included on page
                         'require: raptor-i18n',
-                        {
-                            type: 'i18n-init',
-                            config: {
-                                locales: locales
-                            }
-                        }
+                        'i18n-config'
                     ],
                     async: async
                 };
@@ -76,7 +88,7 @@ module.exports = function create(config) {
         },
 
         calculateKey: function() {
-            return 'i18n: ' + this.path;
+            return this.path;
         }
     };
 };
