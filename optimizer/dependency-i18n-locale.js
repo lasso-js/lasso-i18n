@@ -157,6 +157,8 @@ module.exports = {
 
     init: function() {
 
+        this.defaultBundleName = 'raptor-i18n-' + this.locale;
+
         var locales = this.locales = new Array(2);
 
         if (this.locale.charAt(2) === '_') {
@@ -225,10 +227,10 @@ module.exports = {
     },
 
     calculateKey: function() {
-        return 'raptor-i18n-' + this.locale;
+        return this.defaultBundleName;
     },
 
     toString: function() {
-        return 'raptor-i18n-' + this.locale;
+        return this.defaultBundleName;
     }
 };
