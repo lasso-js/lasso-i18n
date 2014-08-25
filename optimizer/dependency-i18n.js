@@ -50,9 +50,9 @@ module.exports = function create(config) {
         loadPackageManifest: function(optimizerContext, callback) {
 
             var manifest = null;
-            var i18nContext = optimizerContext.attributes[CONTEXT_ATTRIBUTE_KEY];
+            var i18nContext = optimizerContext.data[CONTEXT_ATTRIBUTE_KEY];
             if (i18nContext === undefined) {
-                i18nContext = optimizerContext.attributes[CONTEXT_ATTRIBUTE_KEY] = new I18nContext({
+                i18nContext = optimizerContext.data[CONTEXT_ATTRIBUTE_KEY] = new I18nContext({
                     config: config
                 });
 
