@@ -1,6 +1,5 @@
 var logger = require('raptor-logging').logger(module);
 var transport = require('raptor-modules/transport');
-var Readable = require('stream').Readable;
 var parallel = require('raptor-async/parallel');
 var nodePath = require('path');
 var extend = require('raptor-util/extend');
@@ -173,54 +172,57 @@ module.exports = {
     },
 
     read: function(optimizerContext, callback) {
-        var out = new Readable();
+        var self = this;
+        var out = optimizerContext.deferredStream(function() {
+            var i18nContext = self.i18nContext;
+            var localeContext = {
+                beforeCode: [],
+                afterCode: [],
+                attributes: {},
+                locale: self.locale,
+                localeModuleName: '/i18n/' + (self.locale || '_')
+            };
 
-        out._read = function() {
-            // don't need to implement becuase we automatically start reading raw dictionary
-        };
-
-        var i18nContext = this.i18nContext;
-        var localeContext = {
-            beforeCode: [],
-            afterCode: [],
-            attributes: {},
-            locale: this.locale,
-            localeModuleName: '/i18n/' + (this.locale || '_')
-        };
-
-        var work = [];
-        var names = i18nContext.getDictionaryNames();
-        for (var i = 0; i < names.length; i++) {
-            var info = i18nContext.getDictionaryInfoByName(names[i]);
-            work.push(createReadDictionaryTask(info, this, localeContext, out));
-        }
-
-        parallel(work, function(err, results) {
-            if (err) {
-                logger.error('Error reading dictionaries for locale "' + this.locale + '"', err);
-            } else {
-                out.push('(function(){\n');
-                
-                var i;
-
-                for (i = 0; i < localeContext.beforeCode.length; i++) {
-                    out.push(localeContext.beforeCode[i]);
-                    out.push('\n');
-                }
-
-                for (i = 0; i < results.length; i++) {
-                    out.push(results[i]);
-                }
-
-                for (i = 0; i < localeContext.afterCode.length; i++) {
-                    out.push(localeContext.afterCode[i]);
-                    out.push('\n');
-                }
-
-                out.push('})();\n');
+            var work = [];
+            var names = i18nContext.getDictionaryNames();
+            for (var i = 0; i < names.length; i++) {
+                var info = i18nContext.getDictionaryInfoByName(names[i]);
+                work.push(createReadDictionaryTask(info, self, localeContext, out));
             }
-            
-            out.push(null);
+
+            logger.info('Compiling dictionaries for locale "' + self.locale + '"...');
+
+            parallel(work, function(err, results) {
+                if (err) {
+                    logger.error('Error reading dictionaries for locale "' + self.locale + '"', err);
+                } else {
+                    out.push('(function(){\n');
+                    
+                    var i;
+
+                    for (i = 0; i < localeContext.beforeCode.length; i++) {
+                        out.push(localeContext.beforeCode[i]);
+                        out.push('\n');
+                    }
+
+                    for (i = 0; i < results.length; i++) {
+                        out.push(results[i]);
+                    }
+
+                    for (i = 0; i < localeContext.afterCode.length; i++) {
+                        out.push(localeContext.afterCode[i]);
+                        out.push('\n');
+                    }
+
+                    out.push('})();\n');
+                }
+                
+                logger.info('Done compiling dictionaries for locale "' + self.locale + '"');
+
+                out.push(null);
+            });
+        }, {
+            encoding: 'utf8'
         });
 
         return out;
