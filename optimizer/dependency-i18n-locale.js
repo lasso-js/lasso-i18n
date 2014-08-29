@@ -51,9 +51,7 @@ function writeDictionary(dictionary, info, localeContext, callback) {
             });
         };
     }
-
     
-
     var work = [];
 
     var keys = Object.keys(dictionary);

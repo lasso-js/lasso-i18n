@@ -3,6 +3,7 @@ var DataHolder = require('raptor-async/DataHolder');
 var fs = require('fs');
 require('raptor-polyfill/string/endsWith');
 var SUFFIX = 'i18n.json';
+var CONTEXT_ATTRIBUTE_KEY = 'raptor-i18n';
 
 function I18nContext(options) {
     this.config = options.config;
@@ -10,6 +11,16 @@ function I18nContext(options) {
     this.dictionaryByName = {};
     this.rawDictionaryByPath = {};
 }
+
+I18nContext.getI18nContext = function(optimizerContext, config) {
+    var i18nContext = optimizerContext.data[CONTEXT_ATTRIBUTE_KEY];
+    if (i18nContext === undefined) {
+        i18nContext = optimizerContext.data[CONTEXT_ATTRIBUTE_KEY] = new I18nContext({
+            config: config
+        });
+    }
+    return i18nContext;
+};
 
 function getBaseAndExtension(path, srcDir) {
     var base = path.substring(srcDir.length + 1);

@@ -1,6 +1,8 @@
-var transport = require('raptor-modules/transport');
+var I18nContext = require('./I18nContext');
 
 module.exports = function create(config) {
+
+    var locales = config.locales;
 
     return {
 
@@ -8,25 +10,36 @@ module.exports = function create(config) {
             path: 'string'
         },
 
-        init: function() {
-            
-        },
+        loadPackageManifest: function(optimizerContext, callback) {
+            var i18nContext = I18nContext.getI18nContext(optimizerContext, config);
+            var async = {};
 
-        read: function(optimizerContext, callback) {
+            for (var i = 0; i < locales.length; i++) {
+                var locale = locales[i];
+                var asyncPackageName = 'i18n-' + locale;
 
-            var initConfig = {
-                locales: config.locales
+                // add the dependency for the current locale
+                async[asyncPackageName] = [
+                    {
+                        type: 'i18n-locale',
+                        locale: locale,
+                        i18nContext: i18nContext
+                    }
+                ];
+            }
+
+            var manifest = {
+                dependencies: [
+                    // make sure raptor-i18n is included on page
+                    'require: raptor-i18n',
+
+                    // The config needs to be written as JavaScript
+                    'i18n-config-def'
+                ],
+                async: async
             };
 
-            var out = transport.defineCode(
-                // path:
-                '/raptor-i18n/config',
-
-                // code:
-                'module.exports = ' + JSON.stringify(initConfig, null, ' ') + ';');
-
-
-            return out;
+            callback(null, manifest);
         },
 
         calculateKey: function() {
