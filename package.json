@@ -1,38 +1,38 @@
 {
-    "name": "raptor-i18n",
-    "description": "Library for handling internationalization",
-    "keywords": [
-        "i18n",
-        "localization",
-        "internationalization"
-    ],
-    "main": "raptor-i18n.js",
-    "browser": {
-        "./raptor-i18n.js": "./raptor-i18n_browser.js"
-    },
-    "scripts": {
-        "test": "node_modules/.bin/jshint *.js"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/raptorjs3/raptor-i18n.git"
-    },
-    "author": "Phillip Gates-Idem <pnidem@gmail.com>",
-    "maintainers": "Phillip Gates-Idem <pnidem@gmail.com>",
-    "dependencies": {
-        "raptor-async": "^0.2.7-beta",
-        "raptor-logging": "^0.2.6-beta",
-        "raptor-modules": "^0.2.21-beta",
-        "raptor-polyfill": "^0.2.3-beta",
-        "raptor-templates": "^1.1.12-beta",
-        "raptor-util": "^0.2.5-beta"
-    },
-    "devDependencies": {
-        "jshint": "~2.4.4"
-    },
-    "license": "MIT",
-    "publishConfig": {
-        "registry": "https://registry.npmjs.org/"
-    },
-    "version": "0.2.4-beta"
+  "name": "raptor-i18n",
+  "description": "Library for handling internationalization",
+  "keywords": [
+    "i18n",
+    "localization",
+    "internationalization"
+  ],
+  "main": "raptor-i18n.js",
+  "browser": {
+    "./raptor-i18n.js": "./raptor-i18n_browser.js"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/jshint *.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/raptorjs3/raptor-i18n.git"
+  },
+  "author": "Phillip Gates-Idem <pnidem@gmail.com>",
+  "maintainers": "Phillip Gates-Idem <pnidem@gmail.com>",
+  "dependencies": {
+    "raptor-async": "^1.0.0-beta",
+    "raptor-logging": "^1.0.0-beta",
+    "raptor-modules": "^1.0.0-beta",
+    "raptor-polyfill": "^1.0.0-beta",
+    "raptor-templates": "^1.1.24-beta",
+    "raptor-util": "^1.0.0-beta"
+  },
+  "devDependencies": {
+    "jshint": "~2.4.4"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "version": "0.2.4-beta"
 }
