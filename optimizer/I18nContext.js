@@ -22,39 +22,6 @@ I18nContext.getI18nContext = function(optimizerContext, config) {
     return i18nContext;
 };
 
-function getBaseAndExtension(path, srcDir) {
-    var base = path.substring(srcDir.length + 1);
-    var extension;
-
-    if (base.endsWith(SUFFIX)) {
-        var charBeforeSuffix = base.charAt(base.length - SUFFIX.length - 1);
-        if (charBeforeSuffix === '.') {
-            // path is something like "/xyz/something.i18n.json"
-            base = base.substring(0, base.length - SUFFIX.length - 1);
-            extension = '.' + SUFFIX;
-
-            // return ['/xyz/something', '.i18n.json']
-            return [base, extension];
-        } else if (charBeforeSuffix === '/') {
-            // path is something like "/xyz/i18n.json"
-            base = base.substring(0, base.length - SUFFIX.length);
-            extension = '.' + SUFFIX;
-
-            // return ['/xyz/', '.i18n.json']
-            return [base, extension];
-        }
-    }
-
-    var pos;
-    if ((pos = base.indexOf('.')) === -1) {
-        base = base.substring(0, pos);
-        extension = base.substring(pos);
-        return [base, extension];
-    } else {
-        return [base, ''];
-    }
-}
-
 function getDictionaryInfo(path, config) {
     var paths = config.paths;
     for (var i = 0; i < paths.length; i++) {
@@ -62,23 +29,24 @@ function getDictionaryInfo(path, config) {
         if (path.indexOf(candidate.srcDir) === 0) {
             var name;
             
-            var parts = getBaseAndExtension(path, candidate.srcDir);
-            var base = parts[0];
-            var extension = parts[1];
+            var relativeToSrcDir = path.substring(candidate.srcDir.length + 1);
 
-            var lastChar = base.charAt(base.length - 1);
-            if (lastChar === '/') {
-                name = base.substring(0, base.length - 1);
+            if (relativeToSrcDir.endsWith(SUFFIX)) {
+                // chop off the suffix
+                name = relativeToSrcDir.substring(0, relativeToSrcDir.length - SUFFIX.length);
+
+                var lastChar = name.charAt(name.length - 1);
+                if ((lastChar === '/') || (lastChar === '.')) {
+                    name = name.substring(0, name.length - 1);
+                }
             } else {
-                name = base;
-                base = base + '_';
+                name = relativeToSrcDir;
             }
 
             return {
                 name: name,
                 absolutePath: path,
-                base: base,
-                extension: extension,
+                relativePath: relativeToSrcDir,
                 localizedDir: candidate.localizedDir
             };
         }
@@ -116,11 +84,14 @@ I18nContext.prototype = {
         var rawDictionaryHolder = this.rawDictionaryByPath[path];
         if (rawDictionaryHolder === undefined) {
             this.rawDictionaryByPath[path] = rawDictionaryHolder = new DataHolder();
-            
+
             fs.readFile(path, 'utf8', function(err, json) {
                 if (err) {
+                    logger.info('Unable to read dictionary at "' + path + '"');
                     return rawDictionaryHolder.resolve(null);
                 }
+
+                logger.info('Read dictionary at "' + path + '"');
 
                 var raw;
                 try {

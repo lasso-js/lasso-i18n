@@ -108,7 +108,7 @@ function createReadDictionaryTask(info, dependency, localeContext, out) {
         dependency.locales.forEach(function(locale, index) {
             work[index + 1] = function(callback) {
 
-                var path = nodePath.join(info.localizedDir, info.base + locale + info.extension);
+                var path = nodePath.join(info.localizedDir, locale, info.relativePath);
                 dependency.i18nContext.readRawDictionary(path, callback);
             };
         });
@@ -118,7 +118,7 @@ function createReadDictionaryTask(info, dependency, localeContext, out) {
                 return callback(err);
             }
 
-            var merged = result[0] || {};
+            var merged = (result.length) ? extend({}, result[0]) : {};
             for (var i = 1; i < result.length; i++) {
                 var raw = result[i];
                 if (raw) {
@@ -183,6 +183,7 @@ module.exports = {
 
             var work = [];
             var names = i18nContext.getDictionaryNames();
+
             for (var i = 0; i < names.length; i++) {
                 var info = i18nContext.getDictionaryInfoByName(names[i]);
                 work.push(createReadDictionaryTask(info, self, localeContext, out));
