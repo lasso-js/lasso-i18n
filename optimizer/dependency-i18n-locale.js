@@ -3,11 +3,11 @@ var transport = require('raptor-modules/transport');
 var parallel = require('raptor-async/parallel');
 var nodePath = require('path');
 var extend = require('raptor-util/extend');
-var compiler = require('raptor-templates/compiler');
+var markoCompiler = require('marko/compiler');
 var extend = require('raptor-util/extend');
 
 var types = {
-    'rhtml': function(callback) {
+    'marko': function(callback) {
         var value = this.value;
 
         if (Array.isArray(value)) {
@@ -15,12 +15,12 @@ var types = {
         }
 
         var dirname = nodePath.dirname(this.dictionaryInfo.absolutePath);
-        var templatePath = nodePath.join(dirname, this.key + '.rhtml');
+        var templatePath = nodePath.join(dirname, this.key + '.marko');
         var _this = this;
 
-        var moduleName = this.dictionaryModuleName + '/' + this.key + '.rhtml';
+        var moduleName = this.dictionaryModuleName + '/' + this.key + '.marko';
 
-        compiler.compile(value, templatePath, function(err, code) {
+        markoCompiler.compile(value, templatePath, function(err, code) {
             if (err) {
                 return callback(err);
             }
@@ -29,7 +29,7 @@ var types = {
 
             var out = '';
             out += 'function(data) {\n';
-            out += '        return require("raptor-templates").load(module.id + ' + JSON.stringify('/' + _this.key + '.rhtml') + ').renderSync(data);\n';
+            out += '        return require("marko").load(module.id + ' + JSON.stringify('/' + _this.key + '.marko') + ').renderSync(data);\n';
             out += '    }';
             callback(null, out);
         });
