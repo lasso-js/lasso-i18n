@@ -92,6 +92,8 @@ I18nContext.prototype = {
                 }
 
                 logger.info('Read dictionary at "' + path + '"');
+                
+                json = json.trim();
 
                 var raw;
                 try {
