@@ -24,7 +24,7 @@ function configurePaths(config) {
     return paths;
 }
 
-module.exports = function plugin(optimizer, config) {
+module.exports = function plugin(lasso, config) {
 
     if (!config.paths) {
         throw new Error('"paths" configuration option is required');
@@ -38,12 +38,12 @@ module.exports = function plugin(optimizer, config) {
         config.locales.push('');
     }
 
-    optimizer.dependencies.registerType('i18n', require('./dependency-i18n.js')(config));
-    optimizer.dependencies.registerPackageType('i18n-config', require('./dependency-i18n-config.js')(config));
-    optimizer.dependencies.registerJavaScriptType('i18n-config-def', require('./dependency-i18n-config-def.js')(config));
-    optimizer.dependencies.registerJavaScriptType('i18n-locale', require('./dependency-i18n-locale.js'));
+    lasso.dependencies.registerType('i18n', require('./dependency-i18n.js')(config));
+    lasso.dependencies.registerPackageType('i18n-config', require('./dependency-i18n-config.js')(config));
+    lasso.dependencies.registerJavaScriptType('i18n-config-def', require('./dependency-i18n-config-def.js')(config));
+    lasso.dependencies.registerJavaScriptType('i18n-locale', require('./dependency-i18n-locale.js'));
     
-    optimizer.dependencies.registerExtension('i18n.json', 'i18n');
-    optimizer.dependencies.registerExtension('i18n-config', 'i18n-config');
-    optimizer.dependencies.registerExtension('i18n-config-def', 'i18n-config-def');
+    lasso.dependencies.registerExtension('i18n.json', 'i18n');
+    lasso.dependencies.registerExtension('i18n-config', 'i18n-config');
+    lasso.dependencies.registerExtension('i18n-config-def', 'i18n-config-def');
 };

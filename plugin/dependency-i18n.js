@@ -14,21 +14,21 @@ module.exports = function create(config) {
             this.path = this.resolvePath(this.path);
         },
 
-        onAddToPageBundle: function(bundle, optimizerContext) {
-            I18nContext.getI18nContext(optimizerContext, config).addI18nJsonPath(this.path);
+        onAddToPageBundle: function(bundle, lassoContext) {
+            I18nContext.getI18nContext(lassoContext, config).addI18nJsonPath(this.path);
             if (logger.isDebugEnabled()) {
                 logger.debug('Added i18n dictionary: ' + this.path);
             }
         },
 
-        onAddToAsyncPageBundle: function(bundle, optimizerContext) {
-            I18nContext.getI18nContext(optimizerContext, config).addI18nJsonPath(this.path);
+        onAddToAsyncPageBundle: function(bundle, lassoContext) {
+            I18nContext.getI18nContext(lassoContext, config).addI18nJsonPath(this.path);
             if (logger.isDebugEnabled()) {
                 logger.debug('Added i18n dictionary: ' + this.path);
             }
         },
 
-        read: function(optimizerContext, callback) {
+        read: function(lassoContext, callback) {
             return null;
         },
 

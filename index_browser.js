@@ -1,6 +1,6 @@
 var util = require('./util');
 
-var CONFIG_MODULE_NAME = '/raptor-i18n/config';
+var CONFIG_MODULE_NAME = '/lasso-i18n/config';
 
 var config = require(CONFIG_MODULE_NAME);
 
@@ -15,8 +15,10 @@ module.exports = {
     },
 
     loadLocale: function(localeCode, callback) {
+        localeCode = this.findBestLocale(localeCode);
+
         require('raptor-loader').async(
-            'i18n-' + localeCode,
+            'i18n-' + (localeCode || ''),
             callback);
     },
 

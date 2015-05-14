@@ -5,20 +5,20 @@ module.exports = function create(config) {
             path: 'string'
         },
 
-        read: function(optimizerContext, callback) {
+        read: function(lassoContext, callback) {
             var initConfig = {
                 locales: config.locales
             };
 
             return transport.defineCode(
                 // path:
-                '/raptor-i18n/config',
+                '/lasso-i18n/config',
                 // code:
                 'module.exports = ' + JSON.stringify(initConfig, null, ' ') + ';');
         },
 
         calculateKey: function() {
-            return 'raptor-i18n-config-def';
+            return 'lasso-i18n-config-def';
         }
     };
 };

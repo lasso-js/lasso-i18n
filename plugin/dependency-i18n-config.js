@@ -1,17 +1,15 @@
 var I18nContext = require('./I18nContext');
 
 module.exports = function create(config) {
-
     var locales = config.locales;
 
     return {
-
         properties: {
             path: 'string'
         },
 
-        loadPackageManifest: function(optimizerContext, callback) {
-            var i18nContext = I18nContext.getI18nContext(optimizerContext, config);
+        loadPackageManifest: function(lassoContext, callback) {
+            var i18nContext = I18nContext.getI18nContext(lassoContext, config);
             var async = {};
 
             for (var i = 0; i < locales.length; i++) {
@@ -30,8 +28,8 @@ module.exports = function create(config) {
 
             var manifest = {
                 dependencies: [
-                    // make sure raptor-i18n is included on page
-                    'require: raptor-i18n',
+                    // make sure lasso-i18n is included on page
+                    'require: lasso-i18n',
 
                     // The config needs to be written as JavaScript
                     'i18n-config-def'
@@ -43,7 +41,7 @@ module.exports = function create(config) {
         },
 
         calculateKey: function() {
-            return 'raptor-i18n-config';
+            return 'lasso-i18n-config';
         }
     };
 };

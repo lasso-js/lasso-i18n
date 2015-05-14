@@ -1,9 +1,8 @@
 var logger = require('raptor-logging').logger(module);
 var DataHolder = require('raptor-async/DataHolder');
 var fs = require('fs');
-require('raptor-polyfill/string/endsWith');
-var SUFFIX = 'i18n.json';
-var CONTEXT_ATTRIBUTE_KEY = 'raptor-i18n';
+
+var CONTEXT_ATTRIBUTE_KEY = 'lasso-i18n';
 
 function I18nContext(options) {
     this.config = options.config;
@@ -12,10 +11,10 @@ function I18nContext(options) {
     this.rawDictionaryByPath = {};
 }
 
-I18nContext.getI18nContext = function(optimizerContext, config) {
-    var i18nContext = optimizerContext.data[CONTEXT_ATTRIBUTE_KEY];
+I18nContext.getI18nContext = function(lassoContext, config) {
+    var i18nContext = lassoContext.data[CONTEXT_ATTRIBUTE_KEY];
     if (i18nContext === undefined) {
-        i18nContext = optimizerContext.data[CONTEXT_ATTRIBUTE_KEY] = new I18nContext({
+        i18nContext = lassoContext.data[CONTEXT_ATTRIBUTE_KEY] = new I18nContext({
             config: config
         });
     }
@@ -28,20 +27,9 @@ function getDictionaryInfo(path, config) {
         var candidate = paths[i];
         if (path.indexOf(candidate.srcDir) === 0) {
             var name;
-            
-            var relativeToSrcDir = path.substring(candidate.srcDir.length + 1);
+            var relativeToSrcDir;
 
-            if (relativeToSrcDir.endsWith(SUFFIX)) {
-                // chop off the suffix
-                name = relativeToSrcDir.substring(0, relativeToSrcDir.length - SUFFIX.length);
-
-                var lastChar = name.charAt(name.length - 1);
-                if ((lastChar === '/') || (lastChar === '.')) {
-                    name = name.substring(0, name.length - 1);
-                }
-            } else {
-                name = relativeToSrcDir;
-            }
+            relativeToSrcDir = name = path.substring(candidate.srcDir.length + 1);
 
             return {
                 name: name,
@@ -92,7 +80,7 @@ I18nContext.prototype = {
                 }
 
                 logger.info('Read dictionary at "' + path + '"');
-                
+
                 json = json.trim();
 
                 var raw;

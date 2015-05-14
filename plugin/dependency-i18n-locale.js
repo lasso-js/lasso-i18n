@@ -51,7 +51,7 @@ function writeDictionary(dictionary, info, localeContext, callback) {
             });
         };
     }
-    
+
     var work = [];
 
     var keys = Object.keys(dictionary);
@@ -141,7 +141,7 @@ function createReadDictionaryTask(info, dependency, localeContext, out) {
 
                 callback(null, transport.defineCode.sync(moduleName, code) + '\n');
             });
-            
+
         });
     };
 }
@@ -154,7 +154,7 @@ module.exports = {
 
     init: function() {
 
-        this.defaultBundleName = 'raptor-i18n-' + this.locale;
+        this.defaultBundleName = 'i18n-' + this.locale;
 
         var locales = this.locales = new Array(2);
 
@@ -169,9 +169,9 @@ module.exports = {
         }
     },
 
-    read: function(optimizerContext, callback) {
+    read: function(lassoContext, callback) {
         var self = this;
-        var out = optimizerContext.deferredStream(function() {
+        var out = lassoContext.deferredStream(function() {
             var i18nContext = self.i18nContext;
             var localeContext = {
                 beforeCode: [],
@@ -196,7 +196,7 @@ module.exports = {
                     logger.error('Error reading dictionaries for locale "' + self.locale + '"', err);
                 } else {
                     out.push('(function(){\n');
-                    
+
                     var i;
 
                     for (i = 0; i < localeContext.beforeCode.length; i++) {
@@ -215,7 +215,7 @@ module.exports = {
 
                     out.push('})();\n');
                 }
-                
+
                 logger.info('Done compiling dictionaries for locale "' + self.locale + '"');
 
                 out.push(null);

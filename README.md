@@ -1,4 +1,4 @@
-raptor-i18n
+lasso-i18n
 ===========
 
 Library for handling internationalization
