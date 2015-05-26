@@ -107,9 +107,14 @@ function createReadDictionaryTask(info, dependency, localeContext, out) {
 
         dependency.locales.forEach(function(locale, index) {
             work[index + 1] = function(callback) {
+                var path = nodePath.join(info.localizedDir, locale + '.i18n.json');
+                dependency.i18nContext.readRawDictionary(path, function(err, dict) {
+                    if (err) {
+                        return callback(err);
+                    }
 
-                var path = nodePath.join(info.localizedDir, locale, info.relativePath);
-                dependency.i18nContext.readRawDictionary(path, callback);
+                    callback(null, dict[info.relativePath]);
+                });
             };
         });
 
