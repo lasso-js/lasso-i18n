@@ -1,10 +1,6 @@
 module.exports = {
     normalizeLocaleCode: function(localeCode) {
-        if (localeCode.charAt(2) === '-') {
-            return localeCode.replace('-', '_');
-        } else {
-            return localeCode;
-        }
+        return localeCode.replace('_', '-').toLowerCase();
     },
 
     /**

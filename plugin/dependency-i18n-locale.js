@@ -109,7 +109,7 @@ function createReadDictionaryTask(info, dependency, localeContext, out) {
             work[index + 1] = function(callback) {
                 var path = nodePath.join(info.localizedDir, locale + '.i18n.json');
                 dependency.i18nContext.readRawDictionary(path, function(err, dict) {
-                    if (err) {
+                    if (err || !dict) {
                         return callback(err);
                     }
 
@@ -163,9 +163,9 @@ module.exports = {
 
         var locales = this.locales = new Array(2);
 
-        if (this.locale.charAt(2) === '_') {
+        if (this.locale.charAt(2) === '-') {
             locales[0] = this.locale.substring(0, 2);
-            locales[1] = this.locale.substring(3);
+            locales[1] = this.locale;
         } else if (this.locale.length > 0) {
             locales[0] = this.locale;
             locales.length = 1;

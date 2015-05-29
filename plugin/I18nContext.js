@@ -1,5 +1,5 @@
 var logger = require('raptor-logging').logger(module);
-var DataHolder = require('raptor-async/DataHolder');
+var AsyncValue = require('raptor-async/AsyncValue');
 var fs = require('fs');
 
 var CONTEXT_ATTRIBUTE_KEY = 'lasso-i18n';
@@ -71,7 +71,7 @@ I18nContext.prototype = {
     readRawDictionary: function(path, callback) {
         var rawDictionaryHolder = this.rawDictionaryByPath[path];
         if (rawDictionaryHolder === undefined) {
-            this.rawDictionaryByPath[path] = rawDictionaryHolder = new DataHolder();
+            this.rawDictionaryByPath[path] = rawDictionaryHolder = new AsyncValue();
 
             fs.readFile(path, 'utf8', function(err, json) {
                 if (err) {
