@@ -1,4 +1,5 @@
 var I18nContext = require('./I18nContext');
+var util = require('../util');
 
 module.exports = function create(config) {
     var locales = config.locales;
@@ -13,7 +14,7 @@ module.exports = function create(config) {
             var async = {};
 
             for (var i = 0; i < locales.length; i++) {
-                var locale = locales[i];
+                var locale = util.normalizeLocaleCode(locales[i]);
                 var asyncPackageName = 'i18n-' + locale;
 
                 // add the dependency for the current locale

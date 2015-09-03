@@ -5,6 +5,7 @@ var nodePath = require('path');
 var extend = require('raptor-util/extend');
 var markoCompiler = require('marko/compiler');
 var extend = require('raptor-util/extend');
+var util = require('../util');
 
 var types = {
     'marko': function(callback) {
@@ -159,15 +160,17 @@ module.exports = {
 
     init: function() {
 
-        this.defaultBundleName = 'i18n-' + this.locale;
+        var locale = util.normalizeLocaleCode(this.locale);
+
+        this.defaultBundleName = 'i18n-' + locale;
 
         var locales = this.locales = new Array(2);
 
         if (this.locale.charAt(2) === '-') {
-            locales[0] = this.locale.substring(0, 2);
-            locales[1] = this.locale;
-        } else if (this.locale.length > 0) {
-            locales[0] = this.locale;
+            locales[0] = locale.substring(0, 2);
+            locales[1] = locale;
+        } else if (locale.length > 0) {
+            locales[0] = locale;
             locales.length = 1;
         } else {
             locales.length = 0;
@@ -183,7 +186,7 @@ module.exports = {
                 afterCode: [],
                 attributes: {},
                 locale: self.locale,
-                localeModuleName: '/i18n/' + (self.locale || '_')
+                localeModuleName: '/i18n/' + (util.normalizeLocaleCode(self.locale) || '_')
             };
 
             var work = [];
