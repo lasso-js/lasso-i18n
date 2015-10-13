@@ -2,6 +2,7 @@ var util = require('./util');
 var nodePath = require('path');
 var markoLoader = require('marko/runtime/loader');
 var Dictionary = require('./Dictionary');
+var rootDir = require('app-root-dir').get();
 
 var types = {
     'marko': function(context) {
@@ -11,9 +12,7 @@ var types = {
             value = value.join('\n');
         }
 
-        var dirname = nodePath.dirname(context.name);
-        var templatePath = nodePath.join(dirname, context.key + '.marko');
-
+        var templatePath = nodePath.join(rootDir, context.name, context.key + '.marko');
         var template = markoLoader(templatePath, value);
 
         return function(data) {
