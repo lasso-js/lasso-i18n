@@ -1,38 +1,38 @@
 {
-  "name": "lasso-i18n",
-  "description": "Library for handling internationalization",
-  "keywords": [
-    "i18n",
-    "localization",
-    "internationalization"
-  ],
-  "main": "index.js",
-  "browser": {
-    "./index.js": "./index_browser.js"
-  },
-  "scripts": {
-    "test": "node_modules/.bin/jshint *.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lasso-js/lasso-i18n.git"
-  },
-  "author": "Phillip Gates-Idem <pnidem@gmail.com>",
-  "maintainers": "Phillip Gates-Idem <pnidem@gmail.com>",
-  "dependencies": {
-    "app-root-dir": "^1.0.2",
-    "marko": "^2.7.27",
-    "raptor-async": "^1.0.3",
-    "raptor-logging": "^1.0.6",
-    "raptor-modules": "^1.2.3",
-    "raptor-util": "^1.0.9"
-  },
-  "devDependencies": {
-    "jshint": "~2.4.4"
-  },
-  "license": "MIT",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
-  },
-  "version": "1.0.8"
+    "name": "lasso-i18n",
+    "description": "Library for handling internationalization",
+    "keywords": [
+        "i18n",
+        "localization",
+        "internationalization"
+    ],
+    "main": "index.js",
+    "browser": {
+        "./index.js": "./index_browser.js"
+    },
+    "scripts": {
+        "test": "node_modules/.bin/jshint *.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/lasso-js/lasso-i18n.git"
+    },
+    "author": "Phillip Gates-Idem <pnidem@gmail.com>",
+    "maintainers": "Phillip Gates-Idem <pnidem@gmail.com>",
+    "dependencies": {
+        "app-root-dir": "^1.0.2",
+        "marko": "^2.7.27",
+        "raptor-async": "^1.0.3",
+        "raptor-logging": "^1.0.6",
+        "raptor-modules": "^1.2.3",
+        "raptor-util": "^1.0.9"
+    },
+    "devDependencies": {
+        "jshint": "~2.4.4"
+    },
+    "license": "MIT",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org/"
+    },
+    "version": "1.0.9"
 }
