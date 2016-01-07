@@ -8,7 +8,7 @@ var extend = require('raptor-util/extend');
 var util = require('../util');
 
 var types = {
-    'marko': function(callback) {
+    'marko': function(config, callback) {
         var value = this.value;
 
         if (Array.isArray(value)) {
@@ -26,7 +26,9 @@ var types = {
                 return callback(err);
             }
 
-            _this.beforeCode.push(transport.defineCode.sync(moduleName, code));
+            _this.beforeCode.push(transport.defineCode.sync(moduleName, code, {
+                modulesRuntimeGlobal: config.modulesRuntimeGlobal
+            }));
 
             var out = '';
             out += 'function(data) {\n';
@@ -37,13 +39,13 @@ var types = {
     }
 };
 
-function writeDictionary(dictionary, info, localeContext, callback) {
+function writeDictionary(config, dictionary, info, localeContext, callback) {
 
     var code = [];
 
     function createCompileTask(compiler, compilerContext, theLast, index, length) {
         return function(callback) {
-            compiler.call(compilerContext, function(err, compiledCode) {
+            compiler.call(compilerContext, config, function(err, compiledCode) {
                 if (err) {
                     return callback(err);
                 }
@@ -98,7 +100,7 @@ function writeDictionary(dictionary, info, localeContext, callback) {
     });
 }
 
-function createReadDictionaryTask(info, dependency, localeContext, out) {
+function createReadDictionaryTask(config, info, dependency, localeContext, out) {
     return function(callback) {
         var work = new Array(dependency.locales.length + 1);
 
@@ -132,7 +134,7 @@ function createReadDictionaryTask(info, dependency, localeContext, out) {
                 }
             }
 
-            writeDictionary(merged, info, localeContext, function(err, dictionaryCode) {
+            writeDictionary(config, merged, info, localeContext, function(err, dictionaryCode) {
                 if (err) {
                     return callback(err);
                 }
@@ -145,101 +147,105 @@ function createReadDictionaryTask(info, dependency, localeContext, out) {
 
                 var moduleName = localeContext.localeModuleName + '/' + info.name;
 
-                callback(null, transport.defineCode.sync(moduleName, code) + '\n');
+                callback(null, transport.defineCode.sync(moduleName, code, {
+                    modulesRuntimeGlobal: config.modulesRuntimeGlobal
+                }) + '\n');
             });
 
         });
     };
 }
 
-module.exports = {
-    properties: {
-        locale: 'string',
-        i18nContext: 'object'
-    },
+exports.create = function(config) {
+    return {
+        properties: {
+            locale: 'string',
+            i18nContext: 'object'
+        },
 
-    init: function() {
+        init: function() {
 
-        var locale = util.normalizeLocaleCode(this.locale);
+            var locale = util.normalizeLocaleCode(this.locale);
 
-        this.defaultBundleName = 'i18n-' + locale;
+            this.defaultBundleName = 'i18n-' + locale;
 
-        var locales = this.locales = new Array(2);
+            var locales = this.locales = new Array(2);
 
-        if (this.locale.charAt(2) === '-') {
-            locales[0] = locale.substring(0, 2);
-            locales[1] = locale;
-        } else if (locale.length > 0) {
-            locales[0] = locale;
-            locales.length = 1;
-        } else {
-            locales.length = 0;
-        }
-    },
-
-    read: function(lassoContext, callback) {
-        var self = this;
-        var out = lassoContext.deferredStream(function() {
-            var i18nContext = self.i18nContext;
-            var localeContext = {
-                beforeCode: [],
-                afterCode: [],
-                attributes: {},
-                locale: self.locale,
-                localeModuleName: '/i18n/' + (util.normalizeLocaleCode(self.locale) || '_')
-            };
-
-            var work = [];
-            var names = i18nContext.getDictionaryNames();
-
-            for (var i = 0; i < names.length; i++) {
-                var info = i18nContext.getDictionaryInfoByName(names[i]);
-                work.push(createReadDictionaryTask(info, self, localeContext, out));
+            if (this.locale.charAt(2) === '-') {
+                locales[0] = locale.substring(0, 2);
+                locales[1] = locale;
+            } else if (locale.length > 0) {
+                locales[0] = locale;
+                locales.length = 1;
+            } else {
+                locales.length = 0;
             }
+        },
 
-            logger.info('Compiling dictionaries for locale "' + self.locale + '"...');
+        read: function(lassoContext, callback) {
+            var self = this;
+            var out = lassoContext.deferredStream(function() {
+                var i18nContext = self.i18nContext;
+                var localeContext = {
+                    beforeCode: [],
+                    afterCode: [],
+                    attributes: {},
+                    locale: self.locale,
+                    localeModuleName: '/i18n/' + (util.normalizeLocaleCode(self.locale) || '_')
+                };
 
-            parallel(work, function(err, results) {
-                if (err) {
-                    logger.error('Error reading dictionaries for locale "' + self.locale + '"', err);
-                } else {
-                    out.push('(function(){\n');
+                var work = [];
+                var names = i18nContext.getDictionaryNames();
 
-                    var i;
-
-                    for (i = 0; i < localeContext.beforeCode.length; i++) {
-                        out.push(localeContext.beforeCode[i]);
-                        out.push('\n');
-                    }
-
-                    for (i = 0; i < results.length; i++) {
-                        out.push(results[i]);
-                    }
-
-                    for (i = 0; i < localeContext.afterCode.length; i++) {
-                        out.push(localeContext.afterCode[i]);
-                        out.push('\n');
-                    }
-
-                    out.push('})();\n');
+                for (var i = 0; i < names.length; i++) {
+                    var info = i18nContext.getDictionaryInfoByName(names[i]);
+                    work.push(createReadDictionaryTask(config, info, self, localeContext, out));
                 }
 
-                logger.info('Done compiling dictionaries for locale "' + self.locale + '"');
+                logger.info('Compiling dictionaries for locale "' + self.locale + '"...');
 
-                out.push(null);
+                parallel(work, function(err, results) {
+                    if (err) {
+                        logger.error('Error reading dictionaries for locale "' + self.locale + '"', err);
+                    } else {
+                        out.push('(function(){\n');
+
+                        var i;
+
+                        for (i = 0; i < localeContext.beforeCode.length; i++) {
+                            out.push(localeContext.beforeCode[i]);
+                            out.push('\n');
+                        }
+
+                        for (i = 0; i < results.length; i++) {
+                            out.push(results[i]);
+                        }
+
+                        for (i = 0; i < localeContext.afterCode.length; i++) {
+                            out.push(localeContext.afterCode[i]);
+                            out.push('\n');
+                        }
+
+                        out.push('})();\n');
+                    }
+
+                    logger.info('Done compiling dictionaries for locale "' + self.locale + '"');
+
+                    out.push(null);
+                });
+            }, {
+                encoding: 'utf8'
             });
-        }, {
-            encoding: 'utf8'
-        });
 
-        return out;
-    },
+            return out;
+        },
 
-    calculateKey: function() {
-        return this.defaultBundleName;
-    },
+        calculateKey: function() {
+            return this.defaultBundleName;
+        },
 
-    toString: function() {
-        return this.defaultBundleName;
-    }
+        toString: function() {
+            return this.defaultBundleName;
+        }
+    };
 };

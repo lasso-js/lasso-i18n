@@ -20,7 +20,7 @@ function configurePaths(config) {
 
         paths[i] = path;
     }
-    
+
     return paths;
 }
 
@@ -31,18 +31,18 @@ module.exports = function plugin(lasso, config) {
     }
 
     config.paths = configurePaths(config);
-    
+
     if (!config.locales || !config.locales.length) {
         config.locales = [''];
     } else {
         config.locales.push('');
     }
 
-    lasso.dependencies.registerType('i18n', require('./dependency-i18n.js')(config));
-    lasso.dependencies.registerPackageType('i18n-config', require('./dependency-i18n-config.js')(config));
-    lasso.dependencies.registerJavaScriptType('i18n-config-def', require('./dependency-i18n-config-def.js')(config));
-    lasso.dependencies.registerJavaScriptType('i18n-locale', require('./dependency-i18n-locale.js'));
-    
+    lasso.dependencies.registerType('i18n', require('./dependency-i18n').create(config));
+    lasso.dependencies.registerPackageType('i18n-config', require('./dependency-i18n-config').create(config));
+    lasso.dependencies.registerJavaScriptType('i18n-config-def', require('./dependency-i18n-config-def').create(config));
+    lasso.dependencies.registerJavaScriptType('i18n-locale', require('./dependency-i18n-locale').create(config));
+
     lasso.dependencies.registerExtension('i18n.json', 'i18n');
     lasso.dependencies.registerExtension('i18n-config', 'i18n-config');
     lasso.dependencies.registerExtension('i18n-config-def', 'i18n-config-def');

@@ -1,7 +1,7 @@
 var I18nContext = require('./I18nContext');
 var util = require('../util');
 
-module.exports = function create(config) {
+exports.create = function create(config) {
     var locales = config.locales;
 
     return {

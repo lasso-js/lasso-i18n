@@ -1,7 +1,7 @@
 var I18nContext = require('./I18nContext');
 var logger = require('raptor-logging').logger(module);
 
-module.exports = function create(config) {
+exports.create = function create(config) {
     return {
         properties: {
             path: 'string'

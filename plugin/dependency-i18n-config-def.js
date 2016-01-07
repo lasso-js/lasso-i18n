@@ -1,5 +1,5 @@
 var transport = require('raptor-modules/transport');
-module.exports = function create(config) {
+exports.create = function create(config) {
     return {
         properties: {
             path: 'string'
@@ -14,7 +14,9 @@ module.exports = function create(config) {
                 // path:
                 '/lasso-i18n/config',
                 // code:
-                'module.exports = ' + JSON.stringify(initConfig, null, ' ') + ';');
+                'module.exports = ' + JSON.stringify(initConfig, null, ' ') + ';', {
+                    modulesRuntimeGlobal: config.modulesRuntimeGlobal
+                });
         },
 
         calculateKey: function() {
