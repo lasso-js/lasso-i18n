@@ -167,7 +167,7 @@ exports.create = function(config) {
 
             var locale = util.normalizeLocaleCode(this.locale);
 
-            this.defaultBundleName = 'i18n-' + locale;
+            this.name = 'i18n-' + locale;
 
             var locales = this.locales = new Array(2);
 
@@ -241,11 +241,15 @@ exports.create = function(config) {
         },
 
         calculateKey: function() {
-            return this.defaultBundleName;
+            return this.name;
         },
 
         toString: function() {
-            return this.defaultBundleName;
+            return this.name;
+        },
+
+        getDefaultBundleName: function(pageBundleName, lassoContext) {
+            return this.name + '-' + pageBundleName;
         }
     };
 };
