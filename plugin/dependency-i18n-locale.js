@@ -21,7 +21,7 @@ var types = {
 
         var moduleName = this.dictionaryModuleName + '/' + this.key + '.marko';
 
-        markoCompiler.compile(value, templatePath, function(err, code) {
+        markoCompiler.compile('---\n' + value + '\n---', templatePath, function(err, code) {
             if (err) {
                 return callback(err);
             }
