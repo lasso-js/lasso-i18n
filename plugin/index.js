@@ -40,10 +40,8 @@ module.exports = function plugin(lasso, config) {
 
     lasso.dependencies.registerType('i18n', require('./dependency-i18n').create(config));
     lasso.dependencies.registerPackageType('i18n-config', require('./dependency-i18n-config').create(config));
-    lasso.dependencies.registerJavaScriptType('i18n-config-def', require('./dependency-i18n-config-def').create(config));
-    lasso.dependencies.registerJavaScriptType('i18n-locale', require('./dependency-i18n-locale').create(config));
+    lasso.dependencies.registerPackageType('i18n-locale', require('./dependency-i18n-locale').create(config));
 
     lasso.dependencies.registerExtension('i18n.json', 'i18n');
     lasso.dependencies.registerExtension('i18n-config', 'i18n-config');
-    lasso.dependencies.registerExtension('i18n-config-def', 'i18n-config-def');
 };

@@ -21,11 +21,10 @@
   "maintainers": "Phillip Gates-Idem <pnidem@gmail.com>",
   "dependencies": {
     "app-root-dir": "^1.0.2",
-    "marko": "^3.0.0-alpha.2",
+    "marko": "^3.1.1",
     "raptor-async": "^1.0.3",
-    "raptor-logging": "^1.0.6",
-    "raptor-modules": "^1.2.3",
-    "raptor-util": "^1.0.9"
+    "raptor-logging": "^1.1.0",
+    "raptor-util": "^1.0.10"
   },
   "devDependencies": {
     "jshint": "~2.4.4"

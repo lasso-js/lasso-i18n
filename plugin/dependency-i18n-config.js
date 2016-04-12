@@ -27,18 +27,31 @@ exports.create = function create(config) {
                 ];
             }
 
-            var manifest = {
-                dependencies: [
-                    // make sure lasso-i18n is included on page
-                    'require: lasso-i18n',
-
-                    // The config needs to be written as JavaScript
-                    'i18n-config-def'
-                ],
-                async: async
+            var initConfig = {
+                locales: config.locales
             };
 
-            callback(null, manifest);
+            callback(null, {
+                dependencies: [
+                    // make sure lasso-i18n runtime is included on page
+                    'require: lasso-i18n',
+
+                    {
+                        type: 'require',
+                        virtualModule: {
+                            path: __dirname + '/i18n-config',
+                            clientPath: '/lasso-i18n/config',
+                            read: function(lassoContext, callback) {
+                                callback(null,
+                                    'module.exports = ' +
+                                    JSON.stringify(initConfig, null, ' ') +
+                                    ';');
+                            }
+                        }
+                    }
+                ],
+                async: async
+            });
         },
 
         calculateKey: function() {

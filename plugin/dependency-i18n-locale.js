@@ -1,5 +1,4 @@
 var logger = require('raptor-logging').logger(module);
-var transport = require('raptor-modules/transport');
 var parallel = require('raptor-async/parallel');
 var nodePath = require('path');
 var extend = require('raptor-util/extend');
@@ -7,48 +6,81 @@ var markoCompiler = require('marko/compiler');
 var extend = require('raptor-util/extend');
 var util = require('../util');
 
+var sanizeVarNameRegExp = /[^a-zA-Z]/g;
+
+function _sanitizeVarName(varName) {
+    return varName.replace(sanizeVarNameRegExp, '_');
+}
+
 var types = {
-    'marko': function(config, callback) {
-        var value = this.value;
+    'marko': function(compilerContext, callback) {
+        var value = compilerContext.value;
 
         if (Array.isArray(value)) {
             value = value.join('\n');
         }
 
-        var dirname = nodePath.dirname(this.dictionaryInfo.absolutePath);
-        var templatePath = nodePath.join(dirname, this.key + '.marko');
-        var _this = this;
+        var initCode = compilerContext.initCode;
+        var requires = compilerContext.requires;
+        var dependencies = compilerContext.dependencies;
 
-        var moduleName = this.dictionaryModuleName + '/' + this.key + '.marko';
+        if (!requires['marko']) {
+            requires['marko'] = 'marko';
+        }
+
+        var dirname = nodePath.dirname(compilerContext.dictionaryInfo.absolutePath);
+        var templatePath = nodePath.join(dirname, compilerContext.key + '.marko');
+
+        var moduleName = compilerContext.dictionaryModuleName + '/' + compilerContext.key + '.marko';
 
         markoCompiler.compile('---\n' + value + '\n---', templatePath, function(err, code) {
             if (err) {
                 return callback(err);
             }
 
-            _this.beforeCode.push(transport.defineCode.sync(moduleName, code, {
-                modulesRuntimeGlobal: config.modulesRuntimeGlobal
-            }));
+            dependencies.push({
+                type: 'require',
+                virtualModule: {
+                    path: templatePath,
+                    clientPath: moduleName,
+                    read: function(lassoContext, callback) {
+                        callback(null, code);
+                    },
+                    getDefaultBundleName: compilerContext.getDefaultBundleName
+                }
+            });
+
+            var templateVarName = _sanitizeVarName(compilerContext.key) + 'Template';
+
+            initCode.push('var ' + templateVarName +
+                ' = marko.load(' + JSON.stringify(moduleName) + ');');
 
             var out = '';
             out += 'function(data) {\n';
-            out += '        return require("marko").load(module.id + ' + JSON.stringify('/' + _this.key + '.marko') + ').renderSync(data);\n';
+            out += '        return ' + templateVarName + '.renderSync(data);\n';
             out += '    }';
+
             callback(null, out);
         });
     }
 };
 
-function writeDictionary(config, dictionary, info, localeContext, callback) {
+function writeDictionary(dictionary, dictionaryInfo, localeContext, callback) {
 
     var code = [];
+    var initCode = [];
+    var requires = {};
 
-    function createCompileTask(compiler, compilerContext, theLast, index, length) {
+    function createCompileTask(compiler, compilerContext) {
         return function(callback) {
-            compiler.call(compilerContext, config, function(err, compiledCode) {
+            logger.info('Compiling property "' + compilerContext.key + '" in dictionary "' + compilerContext.dictionaryModuleName + '"...');
+            compiler(compilerContext, function(err, compiledCode) {
                 if (err) {
+                    logger.error('Error compiling property "' + compilerContext.key + '" in dictionary "' + compilerContext.dictionaryModuleName + '".', err);
                     return callback(err);
                 }
+
+                logger.info('Compiled property "' + compilerContext.key + '" in dictionary "' + compilerContext.dictionaryModuleName + '".');
                 code.push('    ' + JSON.stringify(compilerContext.key) + ': ' + compiledCode);
                 callback();
             });
@@ -60,7 +92,6 @@ function writeDictionary(config, dictionary, info, localeContext, callback) {
     var keys = Object.keys(dictionary);
     for (var i = 0; i < keys.length; i++) {
         var key = keys[i];
-        var last = (i === keys.length - 1);
 
         if (dictionary.hasOwnProperty(key)) {
             var value = dictionary[key];
@@ -76,19 +107,19 @@ function writeDictionary(config, dictionary, info, localeContext, callback) {
             }
 
             if (compiler) {
-
                 var compilerContext = {
-                    value: value,
                     key: key,
-                    dictionaryInfo: info,
-                    beforeCode: localeContext.beforeCode,
-                    afterCode: localeContext.afterCode,
-                    attributes: localeContext.attributes,
+                    value: value,
+                    dictionaryInfo: dictionaryInfo,
+                    dependencies: localeContext.dependencies,
+                    initCode: initCode,
+                    requires: requires,
                     locale: localeContext.locale,
-                    dictionaryModuleName: localeContext.localeModuleName + '/' + info.name
+                    dictionaryModuleName: localeContext.localeModuleName + '/' + dictionaryInfo.name,
+                    getDefaultBundleName: localeContext.getDefaultBundleName
                 };
 
-                work.push(createCompileTask(compiler, compilerContext, last, i, keys.length));
+                work.push(createCompileTask(compiler, compilerContext));
             } else {
                 code.push('    ' + JSON.stringify(key) + ': ' + JSON.stringify(value));
             }
@@ -96,27 +127,39 @@ function writeDictionary(config, dictionary, info, localeContext, callback) {
     }
 
     parallel(work, function(err) {
-        callback(err, code.join(',\n'));
+        var finalCode = '';
+
+        Object.keys(requires).forEach(function(varName) {
+            var moduleName = requires[varName];
+            finalCode += 'var ' + varName + ' = require(' + JSON.stringify(moduleName) + ');\n';
+        });
+
+        finalCode += '\n' + initCode.join('\n');
+        finalCode += '\nmodule.exports = {\n' + code.join(',\n') + '\n}';
+
+        callback(err, finalCode);
     });
 }
 
-function createReadDictionaryTask(config, info, dependency, localeContext, out) {
+function createReadDictionaryTask(dictionaryInfo, dependency, localeContext, out) {
     return function(callback) {
         var work = new Array(dependency.locales.length + 1);
+        var i18nContext = dependency.i18nContext;
 
         work[0] = function(callback) {
-            dependency.i18nContext.readRawDictionary(info.absolutePath, callback);
+            i18nContext.readRawDictionary(dictionaryInfo.absolutePath, callback);
         };
 
         dependency.locales.forEach(function(locale, index) {
             work[index + 1] = function(callback) {
-                var path = nodePath.join(info.localizedDir, locale + '.i18n.json');
-                dependency.i18nContext.readRawDictionary(path, function(err, dict) {
+                var path = nodePath.join(dictionaryInfo.localizedDir, locale + '.i18n.json');
+
+                i18nContext.readRawDictionary(path, function(err, dict) {
                     if (err || !dict) {
                         return callback(err);
                     }
 
-                    callback(null, dict[info.relativePath]);
+                    callback(null, dict[dictionaryInfo.relativePath]);
                 });
             };
         });
@@ -134,24 +177,31 @@ function createReadDictionaryTask(config, info, dependency, localeContext, out) 
                 }
             }
 
-            writeDictionary(config, merged, info, localeContext, function(err, dictionaryCode) {
+            var moduleName = localeContext.localeModuleName + '/' + dictionaryInfo.name;
+
+
+            logger.info('Building dictionary "' + moduleName + '"...');
+            writeDictionary(merged, dictionaryInfo, localeContext, function(err, dictionaryCode) {
                 if (err) {
                     return callback(err);
                 }
 
-                var code = '\nmodule.exports = {\n';
+                logger.info('Built dictionary "' + moduleName + '".');
 
-                code += dictionaryCode;
+                localeContext.dependencies.push({
+                    type: 'require',
+                    virtualModule: {
+                        path: __dirname + '/' + dictionaryInfo.name,
+                        clientPath: moduleName,
+                        read: function(lassoContext, callback) {
+                            callback(null, dictionaryCode);
+                        },
+                        getDefaultBundleName: localeContext.getDefaultBundleName
+                    }
+                });
 
-                code += '\n}';
-
-                var moduleName = localeContext.localeModuleName + '/' + info.name;
-
-                callback(null, transport.defineCode.sync(moduleName, code, {
-                    modulesRuntimeGlobal: config.modulesRuntimeGlobal
-                }) + '\n');
+                callback();
             });
-
         });
     };
 }
@@ -164,7 +214,6 @@ exports.create = function(config) {
         },
 
         init: function() {
-
             var locale = util.normalizeLocaleCode(this.locale);
 
             this.name = 'i18n-' + locale;
@@ -182,62 +231,52 @@ exports.create = function(config) {
             }
         },
 
-        read: function(lassoContext, callback) {
+        getDependencies: function(lassoContext, callback) {
             var self = this;
-            var out = lassoContext.deferredStream(function() {
-                var i18nContext = self.i18nContext;
-                var localeContext = {
-                    beforeCode: [],
-                    afterCode: [],
-                    attributes: {},
-                    locale: self.locale,
-                    localeModuleName: '/i18n/' + (util.normalizeLocaleCode(self.locale) || '_')
-                };
 
-                var work = [];
-                var names = i18nContext.getDictionaryNames();
+            var dependencies = [];
 
-                for (var i = 0; i < names.length; i++) {
-                    var info = i18nContext.getDictionaryInfoByName(names[i]);
-                    work.push(createReadDictionaryTask(config, info, self, localeContext, out));
+            var i18nContext = self.i18nContext;
+            var localeContext = {
+                // `dependencies` properties will collect all of the CommonJS
+                // modules that were produced as part of the compilation
+                // of dictionaries in this locale
+                dependencies: dependencies,
+
+                // The locale that we are building
+                locale: self.locale,
+
+                // The
+                localeModuleName: '/i18n/' + (util.normalizeLocaleCode(self.locale) || '_'),
+
+                getDefaultBundleName: function(pageBundleName, lassoContext) {
+                    return self.name + '-' + pageBundleName;
+                }
+            };
+
+            var work = [];
+            var names = i18nContext.getDictionaryNames();
+
+            logger.debug('Dictionary names:\n' + names.join('\n'));
+
+            for (var i = 0; i < names.length; i++) {
+                var dictionaryInfo = i18nContext.getDictionaryInfoByName(names[i]);
+                work.push(createReadDictionaryTask(dictionaryInfo, self, localeContext));
+            }
+
+            logger.info('Compiling dictionaries for locale "' + self.locale + '"...');
+
+            parallel(work, function(err, results) {
+                if (err) {
+                    logger.error('Error reading dictionaries for locale "' + self.locale + '"', err);
+                    return callback(err);
                 }
 
-                logger.info('Compiling dictionaries for locale "' + self.locale + '"...');
-
-                parallel(work, function(err, results) {
-                    if (err) {
-                        logger.error('Error reading dictionaries for locale "' + self.locale + '"', err);
-                    } else {
-                        out.push('(function(){\n');
-
-                        var i;
-
-                        for (i = 0; i < localeContext.beforeCode.length; i++) {
-                            out.push(localeContext.beforeCode[i]);
-                            out.push('\n');
-                        }
-
-                        for (i = 0; i < results.length; i++) {
-                            out.push(results[i]);
-                        }
-
-                        for (i = 0; i < localeContext.afterCode.length; i++) {
-                            out.push(localeContext.afterCode[i]);
-                            out.push('\n');
-                        }
-
-                        out.push('})();\n');
-                    }
-
-                    logger.info('Done compiling dictionaries for locale "' + self.locale + '"');
-
-                    out.push(null);
+                logger.info('Finished compiling dictionaries for locale "' + self.locale + '".');
+                callback(null, {
+                    dependencies: dependencies
                 });
-            }, {
-                encoding: 'utf8'
             });
-
-            return out;
         },
 
         calculateKey: function() {
