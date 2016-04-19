@@ -285,10 +285,6 @@ exports.create = function(config) {
 
         toString: function() {
             return this.name;
-        },
-
-        getDefaultBundleName: function(pageBundleName, lassoContext) {
-            return this.name + '-' + pageBundleName;
         }
     };
 };

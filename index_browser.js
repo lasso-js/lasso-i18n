@@ -17,7 +17,7 @@ module.exports = {
     loadLocale: function(localeCode, callback) {
         localeCode = this.findBestLocale(localeCode);
 
-        require('raptor-loader').async(
+        require('lasso-loader').async(
             'i18n-' + (localeCode || ''),
             callback);
     },
