@@ -1,4 +1,6 @@
 lasso-i18n
 ===========
 
-Library for handling internationalization
+Library for handling internationalization for Lasso.
+
+

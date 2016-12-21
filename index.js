@@ -16,7 +16,7 @@ var types = {
         var template = markoLoader(templatePath, value);
 
         return function(data) {
-            return template.renderSync(data);
+            return template.renderToString(data);
         };
     }
 };

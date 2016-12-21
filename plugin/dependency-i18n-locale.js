@@ -57,7 +57,7 @@ var types = {
 
             var out = '';
             out += 'function(data) {\n';
-            out += '        return ' + templateVarName + '.renderSync(data);\n';
+            out += '        return ' + templateVarName + '.renderToString(data);\n';
             out += '    }';
 
             callback(null, out);
