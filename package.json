@@ -21,7 +21,7 @@
     "maintainers": "Phillip Gates-Idem <pnidem@gmail.com>",
     "dependencies": {
         "app-root-dir": "^1.0.2",
-        "marko": "^3.13.2",
+        "marko": "^4.3.0",
         "raptor-async": "^1.0.3",
         "raptor-logging": "^1.1.0",
         "raptor-util": "^1.0.10"
