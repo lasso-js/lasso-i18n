@@ -33,10 +33,11 @@ var types = {
 
         var moduleName = compilerContext.dictionaryModuleName + '/' + compilerContext.key + '.marko';
 
-        markoCompiler.compile('---\n' + value + '\n---', templatePath, function(err, code) {
+        markoCompiler.compileForBrowser('---\n' + value + '\n---', templatePath, function(err, compiledTemplate) {
             if (err) {
                 return callback(err);
             }
+            var code = compiledTemplate.code;
 
             dependencies.push({
                 type: 'require',
